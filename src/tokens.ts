@@ -1,12 +1,8 @@
-export abstract class Token {
-    abstract readonly kind: string;
-}
 
-export class Word extends Token {
+export class Word{
     readonly kind: string = 'word';
 
     constructor(readonly value: string) {
-        super();
     }
 }
 
