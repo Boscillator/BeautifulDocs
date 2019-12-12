@@ -1,0 +1,23 @@
+{
+  "name": "beautifuldocs",
+  "version": "0.0.1",
+  "description": "A markdown to pdf compiler with an focus on beautiful output.",
+  "main": "index.ts",
+  "scripts": {
+    "start": "ts-node index.ts",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Boscillator/BeautifulDocs.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Boscillator/BeautifulDocs/issues"
+  },
+  "homepage": "https://github.com/Boscillator/BeautifulDocs#readme",
+  "dependencies": {
+    "typescript": "^3.7.3"
+  }
+}
