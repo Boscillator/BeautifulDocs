@@ -8,10 +8,15 @@ export class LayedOutWord extends Word {
     }
 }
 
+function assertUnreachable(_v: never): never {
+    throw new Error("Didn't expect to get here.")
+}
+
 export enum WeightFunction {
     Linear,
     Quadratic,
-    Cubic
+    Cubic,
+    Exponential
 }
 
 export interface LayoutConfig {
@@ -36,21 +41,28 @@ function getWidthOfSpan(doc: Word[], i: number, j: number) {
 }
 
 
-function score(i: number, j: number, doc: Word[], config: LayoutConfig) {
+function weightFunction(f: WeightFunction, v) {
+    switch (f) {
+        case WeightFunction.Linear:
+            return v;
+        case WeightFunction.Quadratic:
+            return v ** 2;
+        case WeightFunction.Cubic:
+            return v ** 3;
+        case WeightFunction.Exponential:
+            return Math.exp(v);
+    }
+    return assertUnreachable(f);
+}
+
+function scoreLine(i: number, j: number, doc: Word[], config: LayoutConfig) {
     const len = getWidthOfSpan(doc, i, j);
     if(len > config.maxLineLength) {
         return Infinity;
     }
 
     let dif = Math.abs(len - config.idealLineLength);
-    switch(config.jaggednessWeightingFunction) {
-        case WeightFunction.Linear:
-            return dif;
-        case WeightFunction.Quadratic:
-            return dif**2;
-        case WeightFunction.Cubic:
-            return dif**3;
-    }
+    return weightFunction(config.jaggednessWeightingFunction, dif);
 }
 
 export function debugLayoutString(doc: LayedOutWord[]) {
@@ -75,7 +87,7 @@ export function knuthAndPlass(doc: Word[], config: LayoutConfig) {
         let bestScore = Infinity;
         let bestIdx = null;
         for(let i = 0; i < j; i++) {
-            let myScore = lineBreaks[i].score + score(i, j, doc, config);
+            let myScore = lineBreaks[i].score + scoreLine(i, j, doc, config);
             if(myScore < bestScore) {
                 bestScore = myScore;
                 bestIdx = i;
