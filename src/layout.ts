@@ -3,7 +3,7 @@ import {Word} from './tokens';
 export class LayedOutWord extends Word {
     hasNewLine: boolean;
     constructor(hasNewLine: boolean, parent: Word) {
-        super(parent.value);
+        super(parent.value, parent.forceNewLine);
         this.hasNewLine = hasNewLine;
     }
 }
@@ -61,13 +61,28 @@ function scoreLine(i: number, j: number, doc: Word[], config: LayoutConfig) {
         return Infinity;
     }
 
-    let dif = Math.abs(len - config.idealLineLength);
+    let dif = 0;
+    if(doc[j].forceNewLine) {
+        //Only score positive jaggedness for last line in paragraph.
+        dif = Math.max(0, len - config.idealLineLength);
+    }
+    else {
+        dif = Math.abs(len - config.idealLineLength);
+    }
+
     return weightFunction(config.jaggednessWeightingFunction, dif);
 }
 
 export function debugLayoutString(doc: LayedOutWord[]) {
     return doc.reduce((buf, w) => {
-        return buf +  w.value + (w.hasNewLine ? '\n' : ' ');
+        let ender = ' ';
+        if (w.forceNewLine) {
+            ender = '\n\n';
+        }
+        else if (w.hasNewLine) {
+            ender = '\n';
+        }
+        return buf +  w.value + ender;
     }, "");
 }
 
@@ -86,11 +101,16 @@ export function knuthAndPlass(doc: Word[], config: LayoutConfig) {
 
         let bestScore = Infinity;
         let bestIdx = null;
-        for(let i = 0; i < j; i++) {
+        for(let i = j - 1; i >= 0; i--) {
             let myScore = lineBreaks[i].score + scoreLine(i, j, doc, config);
             if(myScore < bestScore) {
                 bestScore = myScore;
                 bestIdx = i;
+            }
+
+            if(doc[i].forceNewLine) {
+                // Don't go searching beyond a known newline
+                break;
             }
         }
 
@@ -102,7 +122,7 @@ export function knuthAndPlass(doc: Word[], config: LayoutConfig) {
 
 
     // Knowing there must be a newline after the last word, backtrack the optimal solution.
-    let layedOut = doc.map(w => new LayedOutWord(false, w));
+    let layedOut = doc.map(w => new LayedOutWord(w.forceNewLine, w));
     let lineBreakIdx = lineBreaks.length - 1;
     while(lineBreakIdx !== 0) {
         layedOut[lineBreakIdx].hasNewLine = true;
